@@ -7,8 +7,8 @@ import csv
 import requests
 
 
-GITHUB_USER = 'lwc541117@gmail.com'
-GITHUB_PASSWORD = 'lwc541117+'
+GITHUB_USER = 'user email/id'
+GITHUB_PASSWORD = 'user password'
 REPO = 'video-react/video-react'  # format is username/repo
 ISSUES_FOR_REPO_URL = 'https://api.github.com/repos/%s/issues' % REPO
 params_payload = {'filter' : 'all', 'state' : 'all' } # state: closed, open, all
