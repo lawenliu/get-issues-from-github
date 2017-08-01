@@ -7,8 +7,8 @@ import xml.etree.cElementTree as ET
 import requests
 
 
-GITHUB_USER = 'lxl_tuizi@hotmail.com'
-GITHUB_PASSWORD = 'ziranzhiyi123='
+GITHUB_USER = 'user email/id'
+GITHUB_PASSWORD = 'user password'
 REPO = 'elastic/elasticsearch'  # format is username/repo
 #REPO = 'video-react/video-react'
 ISSUES_FOR_REPO_URL = 'https://api.github.com/repos/%s/issues' % REPO # use this for first, and following for sub url
