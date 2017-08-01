@@ -1,0 +1,81 @@
+"""
+Exports Issues from a specified repository to a CSV file
+Uses basic authentication (Github username + password) to retrieve Issues
+from a repository that username has access to. Supports Github API v3.
+"""
+import requests
+
+GITHUB_USER = 'user email/id'
+GITHUB_PASSWORD = 'user password'
+REPO = 'elastic/elasticsearch'  # format is username/repo
+COMMITS_FOR_REPO_URL = 'https://api.github.com/repos/%s/commits' % REPO
+COMMITS_FOR_SUB_URL = 'https://api.github.com/repositories/507775/commits?filter=all&state=all&page=934'
+params_payload = {'filter' : 'all', 'state' : 'all' } # state: closed, open, all
+AUTH = (GITHUB_USER, GITHUB_PASSWORD)
+
+def write_commits(response):
+    #print ("output a list of issues to csv")
+    if not res.status_code == 200:
+        text_file.close()
+        raise Exception(res.status_code)
+    for commit in res.json():
+        sha = commit['sha']
+        get_commit(sha)
+
+def get_commit(sha):
+        commitURL = COMMITS_FOR_REPO_URL + "/" + sha
+        commit_res = requests.get(commitURL, auth = AUTH)
+        if not commit_res.status_code == 200:
+            text_file.close()
+            raise Exception(commit_res.status_code)
+        commit_json = commit_res.json();
+        text_file.write("time:\n")
+        text_file.write(commit_json['commit']['committer']['date'] + "\n")
+        print (commit_json['commit']['committer']['date'])
+        text_file.write("class:\n")            
+        for classfile in commit_json['files']:
+            if classfile['filename'].find(".java") > -1:
+                text_file.write(classfile['filename'] + "\n")
+        text_file.write("comments:\n")
+        text_file.write(commit_json['commit']['message'].encode('utf-8') + "\n")
+        commentURL = commit_json['comments_url']
+        commentResult = get_comments(commentURL)
+def get_comments(commentURL):
+    try:
+        comment_res = requests.get(commentURL, auth = AUTH)
+        if not comment_res.status_code == 200:
+            text_file.close()
+            raise Exception(comment_res.status_code)
+        for comment in comment_res.json():
+            text_file.write(comment['body'].encode('utf-8') + "\n")
+        text_file.write("\n")
+    except:
+        print ("comment exception!")
+
+pageNumber = 1
+fileNumber = 36
+text_file = open("elasticsearchCommit%s.txt" % fileNumber, "w")
+res = requests.get(COMMITS_FOR_SUB_URL, params=params_payload, auth=AUTH)               
+write_commits(res)
+
+#more pages? examine the 'link' header returned
+while True:
+    if 'link' not in res.headers:
+        break;
+    pages = dict(
+        [(rel[6:-1], url[url.index('<')+1:-1]) for url, rel in
+            [link.split(';') for link in
+                res.headers['link'].split(',')]])
+    print (pages['next'])
+    res = requests.get(pages['next'], params=params_payload, auth=AUTH)
+    write_commits(res)
+    if pages['next'] == pages['last']:
+        break
+    pageNumber += 1
+    if pageNumber == 30:
+        text_file.close()
+        fileNumber += 1
+        pageNumber = 0
+        text_file = open("elasticsearchCommit%s.txt" % fileNumber, "w")
+text_file.close()
+
